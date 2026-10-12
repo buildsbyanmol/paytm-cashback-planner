@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Paytm × CashKaro cashback planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F6FA; --surface:#FFFFFF; --surface-2:#EAF0F7; --ink:#14213D; --ink-2:#4A5874; --line:#D5DEEA;
+  --ck:#7A8699; --cb:#0B6FD1; --buf:#E2A100; --profit:#1C9B66; --loss:#D33F49; --focus:#0B6FD1;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1626; --surface:#16213A; --surface-2:#1D2B48; --ink:#E8EEF8; --ink-2:#A3B1C9; --line:#2C3C5E;
+    --ck:#8E9AB0; --cb:#4DA3FF; --buf:#F2B825; --profit:#3CC48A; --loss:#FF6B74; --focus:#4DA3FF;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1626; --surface:#16213A; --surface-2:#1D2B48; --ink:#E8EEF8; --ink-2:#A3B1C9; --line:#2C3C5E;
+  --ck:#8E9AB0; --cb:#4DA3FF; --buf:#F2B825; --profit:#3CC48A; --loss:#FF6B74; --focus:#4DA3FF;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Manrope,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px;line-height:1.5;font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 64px}
+h1{font-size:clamp(24px,3.4vw,34px);line-height:1.15;margin:0 0 6px;font-weight:800;letter-spacing:-.02em}
+h2{font-size:19px;margin:0 0 4px;font-weight:700}
+h3{font-size:22px;margin:0;font-weight:800;letter-spacing:-.01em}
+p{margin:0}
+.sub{color:var(--ink-2);max-width:72ch}
+.block{margin-top:28px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px}
+.muted{color:var(--ink-2);font-size:13.5px}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* Slabs */
+.slab-groups{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:14px;margin-top:14px}
+.slab-group{display:flex;flex-direction:column;gap:8px}
+.slab-group .gl{font-size:13px;font-weight:600;color:var(--ink-2)}
+.slab-row{display:flex;gap:8px;flex-wrap:wrap}
+.slab{flex:1 1 120px;text-align:left;background:var(--surface-2);border:1.5px solid transparent;border-radius:12px;padding:12px 14px;cursor:pointer}
+.slab .pct{font-size:26px;font-weight:800;line-height:1.1}
+.slab .rng{font-size:13px;color:var(--ink-2)}
+.slab[aria-pressed="true"]{border-color:var(--ink);background:var(--surface)}
+.blend-in{display:flex;align-items:center;gap:6px;margin-top:6px}
+.blend-in input{width:100px}
+.blend-note{font-size:13px;color:var(--ink-2);margin-top:4px}
+
+/* Controls */
+.controls{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:18px;align-items:start}
+.seg{display:inline-flex;background:var(--surface-2);border-radius:10px;padding:3px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+label.f{display:block;font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+input[type=number],select{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px;max-width:100%}
+input[type=number]{width:90px}
+input[type=range]{width:100%;accent-color:var(--ink)}
+.rangeval{font-weight:700}
+
+/* Retailer */
+.retailer{margin-top:22px}
+.r-head{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:18px;align-items:start}
+.r-title .muted{margin-top:2px}
+.miss-box{background:var(--surface-2);border-radius:12px;padding:12px 14px}
+.miss-box.actual{background:transparent;border:1.5px dashed var(--line)}
+.miss-line{display:flex;align-items:center;gap:8px}
+.miss-line input[type=number]{width:76px}
+
+/* Split bar */
+.split{margin-top:18px}
+.split-title{font-size:13.5px;color:var(--ink-2);margin-bottom:6px}
+.split-title b{color:var(--ink)}
+.bar{display:flex;height:34px;border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.bar > span{height:100%;transition:width .25s ease}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:8px;font-size:13px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.verdict{margin-top:10px;font-weight:600;font-size:14px}
+.verdict.ok{color:var(--profit)} .verdict.warn{color:var(--buf)} .verdict.bad{color:var(--loss)}
+
+/* Table */
+.tbl-wrap{overflow-x:auto;margin-top:16px;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:1040px;font-size:13.5px}
+th,td{padding:9px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:600;color:var(--ink-2);background:var(--surface-2);font-size:12.5px;vertical-align:bottom}
+th:first-child,td:first-child{text-align:left;white-space:normal;min-width:190px}
+tbody tr{cursor:pointer}
+tbody tr.on{background:color-mix(in srgb,var(--cb) 9%,transparent)}
+tbody tr:last-child td{border-bottom:0}
+td input[type=number]{width:74px;text-align:right;padding:4px 6px}
+td .cap{display:block;font-size:12px;color:var(--ink-2)}
+.pos{color:var(--profit);font-weight:700} .neg{color:var(--loss);font-weight:700} .amb{color:var(--buf);font-weight:700}
+.zero{margin-top:10px;font-size:13px;color:var(--ink-2)}
+.colgrp{border-left:1px solid var(--line)}
+
+.foot{margin-top:28px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:600}
+.btn:disabled{opacity:.45;cursor:default}
+.explain{margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.explain div{font-size:13.5px;color:var(--ink-2)}
+.explain b{color:var(--ink);display:block;font-size:14px;margin-bottom:2px}
+
+@media (max-width:900px){
+  .slab-groups,.controls,.r-head,.explain{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){.bar > span{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Paytm × CashKaro cashback planner</h1>
+  <p class="sub">Every rupee of commission splits four ways: what CashKaro keeps, what the user gets back, the buffer for missing claims, and Paytm's profit. Pick a slab, set the missing rate or the cashback, then stress-test what happens when missing claims rise. Rates as of October 2026.</p>
+
+  <!-- Slabs -->
+  <section class="block panel" aria-labelledby="slab-h">
+    <h2 id="slab-h">CashKaro share of commission</h2>
+    <p class="muted">Slabs run on combined monthly commission across Flipkart, AJIO, Shopsy and Myntra, charged marginally. Pick a slab to see its rate, or enter monthly volume for the blended rate.</p>
+    <div class="slab-groups">
+      <div class="slab-group">
+        <span class="gl">Monthly commission under ₹50L</span>
+        <div class="slab-row" id="slabs-a"></div>
+      </div>
+      <div class="slab-group">
+        <span class="gl">Monthly commission above ₹50L</span>
+        <div class="slab-row" id="slabs-b"></div>
+      </div>
+      <div class="slab-group">
+        <span class="gl">Blended for a monthly volume</span>
+        <div class="slab-row" id="slabs-c"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Controls -->
+  <section class="block panel controls" aria-label="Settings">
+    <div>
+      <label class="f">What do you want to set?</label>
+      <div class="seg" role="group" aria-label="Mode">
+        <button type="button" data-mode="missing">Set missing rate, see cashback</button>
+        <button type="button" data-mode="cashback">Set cashback, see missing it covers</button>
+      </div>
+      <p class="muted" style="margin-top:8px" id="mode-help"></p>
+    </div>
+    <div>
+      <label class="f" for="profit">Paytm profit, as % of Paytm's share: <span class="rangeval" id="profit-v"></span></label>
+      <input type="range" id="profit" min="0" max="40" step="1">
+    </div>
+    <div>
+      <label class="f" for="round">Round user cashback down to</label>
+      <select id="round">
+        <option value="0.25">nearest 0.25%</option>
+        <option value="0.1">nearest 0.1%</option>
+        <option value="0">no rounding</option>
+      </select>
+      <p class="muted" style="margin-top:6px">Rounding leftovers add to the missing buffer.</p>
+    </div>
+  </section>
+
+  <div class="explain">
+    <div><b>Missing rate</b>Missing claims paid, as % of tracked cashback. At 10%, every ₹100 of tracked cashback brings ₹10 of missing claims with no commission behind them.</div>
+    <div><b>Buffer</b>The part of Paytm's share set aside for missing claims. If claims cost more than the buffer, the gap comes out of Paytm's profit first.</div>
+    <div><b>Out of pocket</b>When missing claims use up the buffer and all of Paytm's profit, Paytm pays the rest from its own pocket.</div>
+  </div>
+
+  <div id="retailers"></div>
+
+  <div class="foot">
+    <p class="muted">Amounts are per order at the order value shown in each row. Click a row to see its split. Commission, order value and cashback cells are editable.</p>
+    <button class="btn" id="reset" type="button">Reset to October 2026 rates</button>
+  </div>
+</div>
+
+<script>
+const L = 100000, CR = 10000000;
+const SLABS = [
+  {id:'s1', grp:'a', rate:12.5, rng:'₹0 to 30L'},
+  {id:'s2', grp:'a', rate:10,   rng:'₹30L to 50L'},
+  {id:'s3', grp:'b', rate:10,   rng:'First ₹2 Cr'},
+  {id:'s4', grp:'b', rate:8,    rng:'₹2 Cr to 5 Cr'},
+  {id:'s5', grp:'b', rate:6,    rng:'Above ₹5 Cr'},
+  {id:'blend', grp:'c', rate:null, rng:''}
+];
+const RETAILERS = [
+  {id:'fk', name:'Flipkart', missing:3.87, ck:3.87,
+   zero:'No cashback: Mobile Tier C and all other mobiles, Gift Cards, Gemstones, Gold & Silver Coins.'},
+  {id:'aj', name:'AJIO', missing:6.56, ck:6.56,
+   zero:'No cashback on Fine Jewellery, Gold & Silver Coins.'},
+  {id:'sh', name:'Shopsy', missing:7.43, ck:7.43,
+   zero:'No cashback: Large Appliances (TVs, ACs, washing machines, refrigerators, microwaves, juicers, mixers, grinders, heaters), Mobile Phones, Emerging & Core Electronics, Lootstore.'},
+  {id:'my', name:'Myntra', missing:9.47, ck:9.47,
+   zero:'No cashback on Gold & Silver Jewellery, Idols, Bars and Coins.'}
+];
+const ROWS = [
+  {id:'fk-bgm',  r:'fk', name:'Books & General Merchandise', rate:5,  cap:null, order:600},
+  {id:'fk-home', r:'fk', name:'Home',                        rate:3,  cap:null, order:1500},
+  {id:'fk-la',   r:'fk', name:'Large Appliances',            rate:3,  cap:200,  order:25000},
+  {id:'fk-ce',   r:'fk', name:'Core Electronics',            rate:3,  cap:200,  order:8000},
+  {id:'fk-iot',  r:'fk', name:'Emerging Electronics: IOT (Automation, Robotics & Wearable)', rate:3, cap:200, order:3000},
+  {id:'fk-ee',   r:'fk', name:'Emerging Electronics: rest of the super categories', rate:3, cap:200, order:5000},
+  {id:'fk-fash', r:'fk', name:'Fashion & Lifestyle',         rate:8,  cap:null, order:1000},
+  {id:'fk-kids', r:'fk', name:'Fashion & Lifestyle: Kids wear', rate:10, cap:null, order:800},
+  {id:'fk-furn', r:'fk', name:'Furniture',                   rate:3,  cap:null, order:12000},
+  {id:'fk-groc', r:'fk', name:'Grocery',                     rate:2,  cap:null, order:1200},
+  {id:'fk-mA',   r:'fk', name:'Mobile Tier A',               rate:1,  cap:100,  order:20000},
+  {id:'fk-mB',   r:'fk', name:'Mobile Tier B',               rate:0.5,cap:100,  order:12000},
+  {id:'aj-nu',   r:'aj', name:'New users of AJIO',           rate:12, cap:null, order:1500},
+  {id:'aj-eu',   r:'aj', name:'Existing users of AJIO',      rate:6,  cap:null, order:1500},
+  {id:'sh-ex',   r:'sh', name:'Shopsy exclusive products',   rate:10, cap:250,  order:400},
+  {id:'sh-fk',   r:'sh', name:'Flipkart products on Shopsy', rate:10, cap:25,   order:400},
+  {id:'my-nu',   r:'my', name:'New users of Myntra',         rate:10, cap:null, order:1200},
+  {id:'my-eu',   r:'my', name:'Existing users of Myntra',    rate:5,  cap:null, order:1200}
+];
+const KEY = 'paytm-ck-planner-v3';
+
+function defaults(){
+  const s = {slab:'s1', volume:40, mode:'missing', profit:10, round:0.25, ret:{}, rows:{}, focus:{}};
+  RETAILERS.forEach(r=>{ s.ret[r.id] = {planned:r.missing, actual:r.ck}; });
+  ROWS.forEach(x=>{ s.rows[x.id] = {rate:x.rate, order:x.order, cb:null}; if(!s.focus[x.r]) s.focus[x.r]=x.id; });
+  return s;
+}
+let S = defaults();
+try{ const raw = localStorage.getItem(KEY); if(raw){ const p = JSON.parse(raw); S = Object.assign(defaults(), p);
+  ROWS.forEach(x=>{ if(!S.rows[x.id]) S.rows[x.id]={rate:x.rate,order:x.order,cb:null}; });
+  RETAILERS.forEach(r=>{ if(!S.ret[r.id]) S.ret[r.id]={planned:r.missing,actual:r.ck}; if(!S.focus[r.id]) S.focus[r.id]=ROWS.find(x=>x.r===r.id).id; });
+}}catch(e){}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ---------- money helpers ---------- */
+const inr = v => {
+  const neg = v < 0; const a = Math.abs(v);
+  const s = a < 100 ? a.toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2})
+                    : Math.round(a).toLocaleString('en-IN');
+  return (neg?'−':'') + '₹' + s;
+};
+const pct = (v,d=2) => (v<0?'−':'') + Math.abs(v).toFixed(d).replace(/\.?0+$/,'') + '%';
+const lakhs = v => v >= 100 ? (v/100).toLocaleString('en-IN',{maximumFractionDigits:2}) + ' Cr' : v.toLocaleString('en-IN',{maximumFractionDigits:2}) + 'L';
+
+/* ---------- CK share ---------- */
+function blended(volL){
+  const v = Math.max(0, volL) * L;
+  const bands = v <= 50*L
+    ? [[0,30*L,12.5],[30*L,50*L,10]]
+    : [[0,2*CR,10],[2*CR,5*CR,8],[5*CR,Infinity,6]];
+  let ck = 0; const parts = [];
+  bands.forEach(([lo,hi,r])=>{ const amt = Math.max(0, Math.min(v,hi)-lo); if(amt>0){ ck += amt*r/100; parts.push({amt,r}); } });
+  return {pct: v ? ck/v*100 : (v<=50*L?12.5:10), ck, v, parts};
+}
+function ckPct(){
+  if(S.slab==='blend') return blended(S.volume).pct;
+  return SLABS.find(x=>x.id===S.slab).rate;
+}
+
+/* ---------- core math ---------- */
+function calc(row){
+  const st = S.rows[row.id], R = S.ret[row.r];
+  const O = Math.max(0, +st.order||0), r = Math.max(0,(+st.rate||0))/100;
+  const k = ckPct()/100, p = S.profit/100, m = Math.max(0,R.planned)/100, a = Math.max(0,R.actual)/100;
+  let C = r*O; const capped = row.cap!=null && C > row.cap; if(capped) C = row.cap;
+  const CK = C*k, Sh = C - CK, P = Sh*p;
+  // cashback rate is order-value independent: commission rate after CK, Paytm profit and buffer
+  const step = +S.round;
+  const floorStep = v => step ? Math.floor(v/step + 1e-9)*step : v;
+  const derivedRate = floorStep(r*100*(1-k)*(1-p)/(1+m));
+  const derivedCap = row.cap!=null ? Math.floor(row.cap*(1-k)*(1-p)/(1+m)) : null;
+  let cbRate, cbCap;
+  if(S.mode==='missing'){
+    cbRate = derivedRate; cbCap = derivedCap;
+  } else {
+    if(st.cb==null) st.cb = +derivedRate.toFixed(2);
+    cbRate = Math.max(0, +st.cb||0);
+    // user cashback stops growing where commission stops growing
+    cbCap = (row.cap!=null && r>0) ? Math.floor(cbRate/100 * row.cap / r) : null;
+  }
+  let cb = cbRate/100 * O; if(cbCap!=null && cb > cbCap) cb = cbCap;
+  const buffer = Sh - P - cb;                 // planned buffer (incl. rounding leftovers)
+  const covers = cb>0 ? buffer/cb : 0;        // missing rate the buffer covers
+  const missCost = a*cb;                      // missing claims at the actual rate
+  const net = Sh - cb - missCost;             // Paytm's real take
+  const zeroAt = cb>0 ? (Sh - cb)/cb : 0;     // missing rate where Paytm profit hits zero
+  return {O,r,C,capped,CK,Sh,P,cbRate,cbCap,cb,buffer,covers,missCost,net,zeroAt,a,m,k};
+}
+
+/* ---------- render: slabs ---------- */
+function renderSlabs(){
+  ['a','b','c'].forEach(g=>{
+    const el = document.getElementById('slabs-'+g); el.innerHTML='';
+    SLABS.filter(s=>s.grp===g).forEach(s=>{
+      const b = document.createElement('button'); b.type='button'; b.className='slab';
+      b.setAttribute('aria-pressed', S.slab===s.id);
+      if(s.id==='blend'){
+        const bl = blended(S.volume);
+        b.innerHTML = `<div class="pct">${pct(bl.pct)}</div><div class="rng">CK share at your volume</div>
+          <div class="blend-in"><span class="muted">₹</span><input type="number" min="0" step="1" value="${S.volume}" aria-label="Monthly commission in lakhs"><span class="muted">lakh / month</span></div>
+          <div class="blend-note">${bl.parts.map(x=>`${lakhs(x.amt/L)} at ${pct(x.r)}`).join(', ')}. CK keeps ${inr(bl.ck)} of ${inr(bl.v)}.</div>`;
+        const inp = b.querySelector('input');
+        inp.addEventListener('click', e=>e.stopPropagation());
+        inp.addEventListener('input', e=>{ S.volume = +e.target.value||0; S.slab='blend'; save(); renderAll(true); });
+      } else {
+        b.innerHTML = `<div class="pct">${pct(s.rate)}</div><div class="rng">${s.rng}</div>`;
+      }
+      b.addEventListener('click', ()=>{ S.slab = s.id; save(); renderAll(); });
+      el.appendChild(b);
+    });
+  });
+}
+
+/* ---------- render: controls ---------- */
+function renderControls(){
+  document.querySelectorAll('[data-mode]').forEach(b=> b.setAttribute('aria-pressed', S.mode===b.dataset.mode));
+  document.getElementById('mode-help').textContent = S.mode==='missing'
+    ? 'You set the missing rate Paytm plans for. The planner works out the highest cashback that still leaves that buffer and Paytm\'s profit.'
+    : 'You set the cashback rate per category. The planner shows how much missing the leftover buffer can absorb.';
+  const pr = document.getElementById('profit'); pr.value = S.profit;
+  document.getElementById('profit-v').textContent = S.profit + '%';
+  document.getElementById('round').value = String(S.round);
+}
+
+/* ---------- render: retailers ---------- */
+function renderRetailers(){
+  const host = document.getElementById('retailers'); host.innerHTML='';
+  RETAILERS.forEach(ret=>{
+    const R = S.ret[ret.id]; const rows = ROWS.filter(x=>x.r===ret.id);
+    const sec = document.createElement('section'); sec.className='retailer panel'; sec.id='ret-'+ret.id;
+    const plannedBox = S.mode==='missing'
+      ? `<div class="miss-box"><label class="f" for="pl-${ret.id}">Missing rate Paytm plans for</label>
+           <div class="miss-line"><input type="number" id="pl-${ret.id}" min="0" max="100" step="0.1" value="${R.planned}"><span>%</span></div>
+           <p class="muted" style="margin-top:4px">Sets the buffer. Cashback is worked out from it.</p></div>`
+      : `<div class="miss-box"><span class="f">Missing rate the buffer covers</span>
+           <p class="muted">Shown per category in the table. It depends on the cashback you set.</p></div>`;
+    sec.innerHTML = `
+      <div class="r-head">
+        <div class="r-title"><h3>${ret.name}</h3><p class="muted">${rows.length} cashback categories</p></div>
+        ${plannedBox}
+        <div class="miss-box actual"><label class="f" for="acn-${ret.id}">Missing rate</label>
+          <div class="miss-line"><input type="number" id="acn-${ret.id}" min="0" max="100" step="0.01" value="${R.actual}"><span>%</span>
+            <button type="button" class="btn" style="padding:5px 10px;font-size:13px;margin-left:auto" id="acr-${ret.id}" ${R.actual===ret.ck?'disabled':''}>Reset</button></div>
+          <input type="range" id="ac-${ret.id}" min="0" max="60" step="0.01" value="${R.actual}" aria-label="Missing rate for ${ret.name}" style="margin-top:8px">
+          <p class="muted" id="acnote-${ret.id}" style="color:var(--loss);font-weight:600" ${R.actual===ret.ck?'':'hidden'}>${ret.ck}% missing as on CashKaro for reference</p></div>
+      </div>
+      <div class="split" id="split-${ret.id}"></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th scope="col">Category</th>
+          <th scope="col">Order value</th>
+          <th scope="col">Commission</th>
+          <th scope="col">Commission ₹</th>
+          <th scope="col">CK keeps</th>
+          <th scope="col">Paytm share</th>
+          <th scope="col" class="colgrp">User cashback</th>
+          <th scope="col">Cashback ₹</th>
+          <th scope="col">Missing buffer</th>
+          <th scope="col">${S.mode==='missing'?'Paytm profit':'Buffer covers'}</th>
+          <th scope="col" class="colgrp">Missing claims<br>at actual rate</th>
+          <th scope="col">Paytm net<br>at actual rate</th>
+          <th scope="col">Profit hits zero<br>at missing rate</th>
+        </tr></thead><tbody></tbody></table></div>
+      <p class="zero">${ret.zero}</p>`;
+    host.appendChild(sec);
+
+    const tb = sec.querySelector('tbody');
+    rows.forEach(row=>{
+      const st = S.rows[row.id]; const c = calc(row);
+      const tr = document.createElement('tr'); if(S.focus[ret.id]===row.id) tr.className='on';
+      const capTxt = row.cap!=null ? `<span class="cap">capped at ₹${row.cap}${c.capped?' (hit)':''}</span>` : '';
+      const cbCell = S.mode==='cashback'
+        ? `<input type="number" min="0" step="0.05" value="${st.cb}" data-cb="${row.id}" aria-label="Cashback rate for ${row.name}">%`
+        : `<b>${pct(c.cbRate)}</b>`;
+      const cbCapTxt = c.cbCap!=null ? `<span class="cap">up to ${inr(c.cbCap)}</span>` : '';
+      const lastPlanned = S.mode==='missing'
+        ? `<span>${inr(c.P)}</span>`
+        : `<span class="${c.covers<0?'neg':(c.covers<c.a?'amb':'pos')}">${pct(c.covers*100,1)}</span>`;
+      const netCls = c.net < 0 ? 'neg' : (c.net < c.P ? 'amb' : 'pos');
+      tr.innerHTML = `
+        <td>${row.name}</td>
+        <td><input type="number" min="0" step="50" value="${st.order}" data-order="${row.id}" aria-label="Order value for ${row.name}"></td>
+        <td><input type="number" min="0" step="0.1" value="${st.rate}" data-rate="${row.id}" aria-label="Commission for ${row.name}">%${capTxt}</td>
+        <td>${inr(c.C)}</td>
+        <td>${inr(c.CK)}</td>
+        <td>${inr(c.Sh)}</td>
+        <td class="colgrp">${cbCell}${cbCapTxt}</td>
+        <td>${inr(c.cb)}</td>
+        <td class="${c.buffer<0?'neg':''}">${inr(c.buffer)}</td>
+        <td>${lastPlanned}</td>
+        <td class="colgrp">${inr(c.missCost)}</td>
+        <td class="${netCls}">${inr(c.net)}</td>
+        <td>${c.cb>0?pct(c.zeroAt*100,1):'n/a'}</td>`;
+      tr.addEventListener('click', e=>{ if(e.target.tagName==='INPUT') return; S.focus[ret.id]=row.id; save(); renderRetailers(); });
+      tb.appendChild(tr);
+    });
+    renderSplit(ret);
+
+    // events
+    const pl = sec.querySelector('#pl-'+ret.id);
+    if(pl) pl.addEventListener('change', e=>{
+      R.planned = Math.max(0, +e.target.value||0); save(); renderRetailers();
+    });
+    const ac = sec.querySelector('#ac-'+ret.id);
+    const acn = sec.querySelector('#acn-'+ret.id), acr = sec.querySelector('#acr-'+ret.id);
+    const setActual = v => { R.actual = Math.max(0, +v||0); save(); updateRetailer(ret); };
+    ac.addEventListener('input', e=>{ setActual(e.target.value); acn.value = R.actual; });
+    acn.addEventListener('input', e=>{ setActual(e.target.value); ac.value = R.actual; });
+    acr.addEventListener('click', ()=>{ setActual(ret.ck); acn.value = ret.ck; ac.value = ret.ck; });
+    sec.querySelectorAll('[data-order]').forEach(i=>i.addEventListener('change',e=>{ S.rows[e.target.dataset.order].order = +e.target.value||0; save(); renderRetailers(); }));
+    sec.querySelectorAll('[data-rate]').forEach(i=>i.addEventListener('change',e=>{ S.rows[e.target.dataset.rate].rate = +e.target.value||0; save(); renderRetailers(); }));
+    sec.querySelectorAll('[data-cb]').forEach(i=>i.addEventListener('change',e=>{ S.rows[e.target.dataset.cb].cb = +e.target.value||0; save(); renderRetailers(); }));
+  });
+}
+
+// lightweight refresh while dragging the actual-missing slider
+function updateRetailer(ret){
+  const sec = document.getElementById('ret-'+ret.id); if(!sec) return;
+  const atRef = S.ret[ret.id].actual === ret.ck;
+  sec.querySelector('#acnote-'+ret.id).hidden = !atRef;
+  sec.querySelector('#acr-'+ret.id).disabled = atRef;
+  const rows = ROWS.filter(x=>x.r===ret.id); const trs = sec.querySelectorAll('tbody tr');
+  rows.forEach((row,i)=>{
+    const c = calc(row), tds = trs[i].children;
+    tds[10].textContent = inr(c.missCost);
+    tds[11].textContent = inr(c.net);
+    tds[11].className = c.net < 0 ? 'neg' : (c.net < c.P ? 'amb' : 'pos');
+    if(S.mode==='cashback'){ const sp = tds[9].querySelector('span'); if(sp) sp.className = c.covers<0?'neg':(c.covers<c.a?'amb':'pos'); }
+  });
+  renderSplit(ret);
+}
+
+function renderSplit(ret){
+  const row = ROWS.find(x=>x.id===S.focus[ret.id]); const c = calc(row);
+  const box = document.getElementById('split-'+ret.id);
+  if(!c.C){ box.innerHTML = `<p class="split-title"><b>${row.name}</b> earns no commission at this order value.</p>`; return; }
+  const used = c.cb + c.missCost;
+  const bufferUsed = Math.min(c.missCost, Math.max(0, c.Sh - c.cb));
+  const profitLeft = Math.max(0, c.Sh - used);
+  const pocket = Math.max(0, used - c.Sh);
+  const total = c.C + pocket;
+  const w = v => (v/total*100).toFixed(3)+'%';
+  let verdict, cls;
+  if(pocket > 0){ verdict = `Missing claims use up the buffer and all of Paytm's profit. Paytm pays ${inr(pocket)} per order from its own pocket.`; cls='bad'; }
+  else if(c.net < c.P - 0.005){ verdict = `Missing claims go past the buffer. Paytm's profit drops from ${inr(c.P)} to ${inr(c.net)} per order.`; cls='warn'; }
+  else { verdict = `The buffer covers missing claims. Paytm keeps ${inr(c.net)} per order${c.net > c.P + 0.005 ? `, ${inr(c.net - c.P)} more than planned` : ''}.`; cls='ok'; }
+  box.innerHTML = `
+    <p class="split-title">Where the commission goes on <b>${row.name}</b>, ${inr(c.O)} order, ${inr(c.C)} commission, missing at ${pct(c.a*100,1)}</p>
+    <div class="bar" role="img" aria-label="Commission split">
+      <span style="width:${w(c.CK)};background:var(--ck)"></span>
+      <span style="width:${w(c.cb)};background:var(--cb)"></span>
+      <span style="width:${w(bufferUsed)};background:var(--buf)"></span>
+      <span style="width:${w(profitLeft)};background:var(--profit)"></span>
+      <span style="width:${w(pocket)};background:var(--loss)"></span>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--ck)"></i>CashKaro ${inr(c.CK)}</span>
+      <span><i style="background:var(--cb)"></i>User cashback ${inr(c.cb)}</span>
+      <span><i style="background:var(--buf)"></i>Missing claims ${inr(bufferUsed)}</span>
+      <span><i style="background:var(--profit)"></i>Paytm profit ${inr(profitLeft)}</span>
+      ${pocket>0?`<span><i style="background:var(--loss)"></i>Paytm out of pocket ${inr(pocket)}</span>`:''}
+    </div>
+    <p class="verdict ${cls}">${verdict}</p>`;
+}
+
+function renderAll(keepSlabFocus){
+  if(!keepSlabFocus) renderSlabs(); else {
+    // refresh blended card text without stealing input focus
+    const bl = blended(S.volume); const card = document.querySelector('#slabs-c .slab');
+    if(card){ card.setAttribute('aria-pressed','true'); card.querySelector('.pct').textContent = pct(bl.pct);
+      card.querySelector('.blend-note').textContent = `${bl.parts.map(x=>`${lakhs(x.amt/L)} at ${pct(x.r)}`).join(', ')}. CK keeps ${inr(bl.ck)} of ${inr(bl.v)}.`; }
+    document.querySelectorAll('#slabs-a .slab,#slabs-b .slab').forEach(b=>b.setAttribute('aria-pressed','false'));
+  }
+  renderControls(); renderRetailers();
+}
+
+/* ---------- global events ---------- */
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{
+  if(S.mode!==b.dataset.mode && b.dataset.mode==='cashback'){
+    // carry the current cashback answer across so nothing jumps
+    ROWS.forEach(row=>{ const c = calc(row); S.rows[row.id].cb = +c.cbRate.toFixed(2); });
+  }
+  S.mode = b.dataset.mode; save(); renderAll();
+}));
+document.getElementById('profit').addEventListener('input', e=>{ S.profit = +e.target.value; save(); renderControls(); renderRetailers(); });
+document.getElementById('round').addEventListener('change', e=>{ S.round = +e.target.value; save(); renderRetailers(); });
+document.getElementById('reset').addEventListener('click', ()=>{ S = defaults(); save(); renderAll(); });
+
+renderAll();
+</script>
+</body>
+</html>
